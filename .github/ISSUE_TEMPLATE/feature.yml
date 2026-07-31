@@ -1,0 +1,17 @@
+name: Command proposal
+description: Propose an ADV command or authoring capability
+title: "[Proposal] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: semantics
+    attributes:
+      label: Runtime semantics
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source evidence and compatibility
+    validations:
+      required: true
