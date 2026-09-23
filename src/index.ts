@@ -12,3 +12,5 @@ export * from "./resources.js";
 export * from "./services.js";
 export * from "./validation.js";
 export { default } from "./plugin.js";
+
+export * from "./documents.js";

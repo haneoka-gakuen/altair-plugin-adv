@@ -59,7 +59,7 @@ const EPISODE_ROW_FIELDS = [
 
 const own = (value: JsonObject, key: string): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
-const commandResourceProjection = (code: number) =>
+const commandResourceProjection = (code: number | string) =>
   commandDescriptor(code)?.fields.find((field) => field.resource !== undefined);
 
 const hasCanonicalParameterFade = (code: number): boolean =>

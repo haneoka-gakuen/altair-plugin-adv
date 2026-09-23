@@ -8,8 +8,7 @@ import {
 import { ADV_COMMAND, createStoryCommand } from "./commands.js";
 import { storyResourceAliases, type StoryResourceKind } from "./resources.js";
 
-export type AltairAdvVisualResourceKind =
-  "background" | "still" | "frame" | "effect" | "post-effect" | "video";
+export type AltairAdvVisualResourceKind = "background" | "still" | "frame" | "effect" | "post-effect" | "video";
 
 export type AltairAdvAudioUsage = "bgm" | "se" | "voice";
 
@@ -38,14 +37,8 @@ const resourceKey = (resource: AltairAdvResourceInsert): string => {
 };
 
 const resourceObject = (resource: AltairAdvResourceInsert): JsonObject => {
-  if (
-    !resource.value ||
-    typeof resource.value !== "object" ||
-    Array.isArray(resource.value)
-  ) {
-    throw new TypeError(
-      `ADV resource '${resourceKey(resource)}' requires an object value`,
-    );
+  if (!resource.value || typeof resource.value !== "object" || Array.isArray(resource.value)) {
+    throw new TypeError(`ADV resource '${resourceKey(resource)}' requires an object value`);
   }
   return cloneStoryValue(resource.value) as JsonObject;
 };
@@ -73,12 +66,8 @@ const replaceResource = (
   kind: StoryResourceKind,
   authoredReference: string,
 ): void => {
-  const identities = new Set(
-    [...storyResourceAliases(kind, value), authoredReference].filter(Boolean),
-  );
-  const index = items.findIndex((item) =>
-    storyResourceAliases(kind, item).some((alias) => identities.has(alias)),
-  );
+  const identities = new Set([...storyResourceAliases(kind, value), authoredReference].filter(Boolean));
+  const index = items.findIndex((item) => storyResourceAliases(kind, item).some((alias) => identities.has(alias)));
   if (index < 0) items.push(cloneStoryValue(value));
   else items[index] = cloneStoryValue(value);
 };
@@ -87,15 +76,11 @@ const replaceResource = (
  * Creates the native ADV command associated with a portable authoring resource.
  * Hosts provide resource data; opcode selection remains owned by this plugin.
  */
-export const createAdvResourceCommand = (
-  resource: AltairAdvResourceInsert,
-): StoryProjectCommand => {
+export const createAdvResourceCommand = (resource: AltairAdvResourceInsert): StoryProjectCommand => {
   const key = resourceKey(resource);
   if (resource.kind === "live2d") {
     return createStoryCommand(ADV_COMMAND.Character, {
-      targetName: String(
-        resource.value.characterKey || resource.value.live2dKey || key,
-      ),
+      targetName: String(resource.value.characterKey || resource.value.live2dKey || key),
       live2dKey: key,
       targetAssetIndex: 0,
       positionType: 5,
@@ -139,16 +124,8 @@ export const createAdvResourceCommand = (
     throw new TypeError(`Unsupported ADV resource kind: ${resource.kind}`);
   }
   return createStoryCommand(
-    resource.usage === "bgm"
-      ? ADV_COMMAND.Bgm
-      : resource.usage === "voice"
-        ? ADV_COMMAND.Voice
-        : ADV_COMMAND.Se,
-    resource.usage === "bgm"
-      ? { bgmRef: key }
-      : resource.usage === "voice"
-        ? { voiceRefs: [key] }
-        : { seRef: key },
+    resource.usage === "bgm" ? ADV_COMMAND.Bgm : resource.usage === "voice" ? ADV_COMMAND.Voice : ADV_COMMAND.Se,
+    resource.usage === "bgm" ? { bgmRef: key } : resource.usage === "voice" ? { voiceRefs: [key] } : { seRef: key },
   );
 };
 
@@ -157,10 +134,7 @@ export const createAdvResourceCommand = (
  * This mutates the supplied draft so history plugins can keep the operation
  * atomic with the command insertion or field assignment that triggered it.
  */
-export const registerAdvResource = (
-  project: StoryProject,
-  resource: AltairAdvResourceInsert,
-): void => {
+export const registerAdvResource = (project: StoryProject, resource: AltairAdvResourceInsert): void => {
   const key = resourceKey(resource);
   const importedValue = resourceObject(resource);
   const value: JsonObject =
@@ -187,11 +161,7 @@ export const registerAdvResource = (
         [key]: cloneStoryValue(stage),
       };
     }
-    if (
-      postEffects &&
-      typeof postEffects === "object" &&
-      !Array.isArray(postEffects)
-    ) {
+    if (postEffects && typeof postEffects === "object" && !Array.isArray(postEffects)) {
       project.runtime.postEffects = {
         ...recordValue(project.runtime.postEffects),
         ...cloneStoryValue(postEffects),
@@ -221,10 +191,7 @@ export const registerAdvResource = (
     const profile = value.profile;
     project.runtime.postEffects = {
       ...recordValue(project.runtime.postEffects),
-      [key]:
-        profile && typeof profile === "object" && !Array.isArray(profile)
-          ? cloneStoryValue(profile)
-          : value,
+      [key]: profile && typeof profile === "object" && !Array.isArray(profile) ? cloneStoryValue(profile) : value,
     };
     return;
   }
@@ -240,9 +207,7 @@ export const registerAdvResource = (
 };
 
 /** Fields that must accompany a resource assignment on an existing command. */
-export const advResourceFieldPatch = (
-  resource: AltairAdvResourceInsert,
-): JsonObject => {
+export const advResourceFieldPatch = (resource: AltairAdvResourceInsert): JsonObject => {
   const key = resourceKey(resource);
   if (resource.kind === "live2d") return { live2dKey: key };
   if (resource.kind === "background") return { backgroundRef: key };

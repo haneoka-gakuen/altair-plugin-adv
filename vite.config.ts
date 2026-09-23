@@ -11,6 +11,7 @@ export default defineConfig({
         assets: resolve(root, "src/assets.ts"),
         commands: resolve(root, "src/commands.ts"),
         compiler: resolve(root, "src/compiler.ts"),
+        documents: resolve(root, "src/documents.ts"),
         format: resolve(root, "src/format.ts"),
         index: resolve(root, "src/index.ts"),
         plugin: resolve(root, "src/plugin.ts"),
@@ -25,6 +26,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: (id) =>
+        id === "@haneoka/altair/documents" ||
         id === "@haneoka/altair/model" ||
         id === "@haneoka/altair/plugins" ||
         id === "@haneoka/vega-protocol",

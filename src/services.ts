@@ -16,10 +16,7 @@ import {
   summarizeStoryCommand,
   type CommandDescriptor,
 } from "./commands.js";
-import {
-  compileStoryProject,
-  compileStoryProjectWithDiagnostics,
-} from "./compiler.js";
+import { compileStoryProject, compileStoryProjectWithDiagnostics } from "./compiler.js";
 import { defineAltairService } from "@haneoka/altair/plugins";
 import {
   importAdvEpisodeJson,
@@ -35,16 +32,8 @@ import {
 } from "./adv-json.js";
 import { ADV_JSON_FORMAT, PROJECT_JSON_FORMAT } from "./format.js";
 import { stringifyStoryJson } from "./json.js";
-import {
-  importStoryProjectJson,
-  parseStoryProjectJson,
-  serializeStoryProjectJson,
-} from "./project-json.js";
-import {
-  advResourceFieldPatch,
-  createAdvResourceCommand,
-  registerAdvResource,
-} from "./resource-authoring.js";
+import { importStoryProjectJson, parseStoryProjectJson, serializeStoryProjectJson } from "./project-json.js";
+import { advResourceFieldPatch, createAdvResourceCommand, registerAdvResource } from "./resource-authoring.js";
 import { storyResourceAliases } from "./resources.js";
 import { assertValidStoryProject, validateStoryProject } from "./validation.js";
 
@@ -95,8 +84,7 @@ export interface AltairAdvService {
   readonly storyResourceAliases: typeof storyResourceAliases;
 }
 
-export const ALTAIR_ADV_SERVICE =
-  defineAltairService<AltairAdvService>("haneoka.altair.adv");
+export const ALTAIR_ADV_SERVICE = defineAltairService<AltairAdvService>("haneoka.altair.adv");
 
 export const altairAdvService: AltairAdvService = Object.freeze({
   opcodes: ADV_COMMAND,

@@ -1,9 +1,12 @@
+import { isVegaCommandType } from "@haneoka/vega-protocol";
 import { ADV_COMMAND, commandDescriptor, storyCommandFieldValue } from "./commands.js";
+import { assertVegaProjectPlugin, isVegaSystemOpcode } from "@haneoka/vega-protocol";
 import {
-  assertVegaProjectPlugin,
-  isVegaSystemOpcode,
-} from "@haneoka/vega-protocol";
-import { STORY_PROJECT_VERSION, type JsonValue, type StoryProject, type StoryProjectCommand } from "@haneoka/altair/model";
+  STORY_PROJECT_VERSION,
+  type JsonValue,
+  type StoryProject,
+  type StoryProjectCommand,
+} from "@haneoka/altair/model";
 import type { AltairValidatorContribution } from "@haneoka/altair/plugins";
 import { storyResourceAliases, type StoryResourceKind } from "./resources.js";
 import { valid } from "semver";
@@ -151,51 +154,23 @@ export const validateStoryProject = (value: unknown): StoryProjectValidationResu
         try {
           assertVegaProjectPlugin(canonical, path);
         } catch (error) {
-          add(
-            "error",
-            "plugin.protocol",
-            path,
-            error instanceof Error ? error.message : String(error),
-          );
+          add("error", "plugin.protocol", path, error instanceof Error ? error.message : String(error));
         }
-        if (
-          typeof plugin.id !== "string" ||
-          !/^[a-z0-9][a-z0-9._/-]*[a-z0-9]$/.test(plugin.id)
-        ) {
+        if (typeof plugin.id !== "string" || !/^[a-z0-9][a-z0-9._/-]*[a-z0-9]$/.test(plugin.id)) {
           add("error", "plugin.id", `${path}.id`, "Plugin ID is invalid");
         } else if (pluginIds.has(plugin.id)) {
-          add(
-            "error",
-            "plugin.duplicate",
-            `${path}.id`,
-            `Plugin '${plugin.id}' occurs more than once`,
-          );
+          add("error", "plugin.duplicate", `${path}.id`, `Plugin '${plugin.id}' occurs more than once`);
         } else {
           pluginIds.add(plugin.id);
         }
         if (typeof plugin.version !== "string" || !valid(plugin.version)) {
-          add(
-            "error",
-            "plugin.version",
-            `${path}.version`,
-            "Plugin version must be an exact semantic version",
-          );
+          add("error", "plugin.version", `${path}.version`, "Plugin version must be an exact semantic version");
         }
         if (plugin.enabled !== undefined && typeof plugin.enabled !== "boolean") {
-          add(
-            "error",
-            "plugin.enabled",
-            `${path}.enabled`,
-            "enabled must be a boolean",
-          );
+          add("error", "plugin.enabled", `${path}.enabled`, "enabled must be a boolean");
         }
         if (plugin.required === true && plugin.enabled === false) {
-          add(
-            "error",
-            "plugin.requiredDisabled",
-            `${path}.enabled`,
-            "A required plugin cannot be disabled",
-          );
+          add("error", "plugin.requiredDisabled", `${path}.enabled`, "A required plugin cannot be disabled");
         }
       }
     }
@@ -279,7 +254,11 @@ export const validateStoryProject = (value: unknown): StoryProjectValidationResu
         continue;
       }
       useId(command.id, `${path}.id`);
-      if (command.command !== null && (!Number.isSafeInteger(command.command) || (command.command as number) < 0)) {
+      if (
+        command.command !== null &&
+        !isVegaCommandType(command.command) &&
+        (!Number.isSafeInteger(command.command) || (command.command as number) < 0)
+      ) {
         add("error", "command.code", `${path}.command`, "Command opcode must be a non-negative integer or null");
       } else if (
         typeof command.command === "number" &&
@@ -535,17 +514,16 @@ export function assertValidStoryProject(value: unknown): asserts value is StoryP
   if (!result.valid) throw new StoryProjectValidationError(result.errors);
 }
 
-export const ADV_PROJECT_VALIDATOR: AltairValidatorContribution =
-  Object.freeze<AltairValidatorContribution>({
-    id: "adv-project",
-    name: "ADV project validation",
-    validate(project) {
-      const result = validateStoryProject(project);
-      return [...result.errors, ...result.warnings].map((issue) => ({
-        severity: issue.severity,
-        code: `adv.${issue.code}`,
-        path: issue.path,
-        message: issue.message,
-      }));
-    },
-  });
+export const ADV_PROJECT_VALIDATOR: AltairValidatorContribution = Object.freeze<AltairValidatorContribution>({
+  id: "adv-project",
+  name: "ADV project validation",
+  validate(project) {
+    const result = validateStoryProject(project);
+    return [...result.errors, ...result.warnings].map((issue) => ({
+      severity: issue.severity,
+      code: `adv.${issue.code}`,
+      path: issue.path,
+      message: issue.message,
+    }));
+  },
+});

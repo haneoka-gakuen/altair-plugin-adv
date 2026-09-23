@@ -1,3 +1,4 @@
+import { ADV_DOCUMENT_COMMANDS } from "./documents.js";
 import { defineAltairPlugin } from "@haneoka/altair/plugins";
 import { ADV_PROJECT_ASSET_PROVIDER } from "./assets.js";
 import { ADV_COMMAND_SCHEMAS } from "./commands.js";
@@ -12,19 +13,15 @@ export const altairAdvPlugin = defineAltairPlugin({
     name: "Altair ADV",
     version: "0.1.0",
     apiVersion: 2,
-    capabilities: [
-      "assets",
-      "commands",
-      "compiler",
-      "diagnostics",
-      "format",
-      "services",
-    ],
+    capabilities: ["assets", "commands", "compiler", "diagnostics", "format", "services"],
   },
   setup(context) {
     context.provide(ALTAIR_ADV_SERVICE, altairAdvService);
     for (const schema of ADV_COMMAND_SCHEMAS) {
-      context.contribute("command", schema);
+      context.contribute("command", {
+        ...schema,
+        document: ADV_DOCUMENT_COMMANDS.find((definition) => definition.type.name === schema.metadata?.advName)!,
+      });
     }
     context.contribute("compiler", ADV_COMPILER_PASS, { priority: 100 });
     context.contribute("validator", ADV_PROJECT_VALIDATOR, {

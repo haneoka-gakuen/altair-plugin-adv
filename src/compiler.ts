@@ -1,3 +1,4 @@
+import { isVegaCommandType } from "@haneoka/vega-protocol";
 import { ADV_COMMAND, commandDescriptor, storyTargetNameFromEditor, storyTargetNames } from "./commands.js";
 import { isVegaSystemOpcode } from "@haneoka/vega-protocol";
 import { storyDiagnostic, type StoryDiagnostic } from "./diagnostics.js";
@@ -147,7 +148,11 @@ export const compileStoryProjectWithDiagnostics = (
       );
       continue;
     }
-    if (!commandDescriptor(command.command) && !isVegaSystemOpcode(command.command)) {
+    if (
+      !isVegaCommandType(command.command) &&
+      !commandDescriptor(command.command) &&
+      !isVegaSystemOpcode(command.command)
+    ) {
       diagnostics.push(
         storyDiagnostic(
           "warning",
@@ -190,34 +195,23 @@ export const compileStoryProjectWithDiagnostics = (
 export const compileStoryProject = (project: StoryProject, sceneId = project.entrySceneId): CompiledAdvStory =>
   compileStoryProjectWithDiagnostics(project, sceneId).story;
 
-export const ADV_COMPILER_PASS: AltairCompilerPassContribution =
-  Object.freeze<AltairCompilerPassContribution>({
-    id: "adv-command-compiler",
-    name: "ADV command compiler",
-    order: 0,
-    apply(request) {
-      const project = cloneStoryValue(request.project);
-      const scene = project.scenes.find(({ id }) => id === request.sceneId);
-      if (!scene) throw new RangeError(`Unknown ADV scene: ${request.sceneId}`);
-      scene.commands[request.commandIndex] = cloneStoryValue(request.command);
+export const ADV_COMPILER_PASS: AltairCompilerPassContribution = Object.freeze<AltairCompilerPassContribution>({
+  id: "adv-command-compiler",
+  name: "ADV command compiler",
+  order: 0,
+  apply(request) {
+    const project = cloneStoryValue(request.project);
+    const scene = project.scenes.find(({ id }) => id === request.sceneId);
+    if (!scene) throw new RangeError(`Unknown ADV scene: ${request.sceneId}`);
+    scene.commands[request.commandIndex] = cloneStoryValue(request.command);
 
-      const result = compileStoryProjectWithDiagnostics(
-        project,
-        request.sceneId,
-      );
-      const outputIndex = result.commandSourceIndexes.indexOf(
-        request.commandIndex,
-      );
-      const pathToken = `.commands[${request.commandIndex}]`;
-      const diagnostics = result.diagnostics.filter(({ path }) =>
-        path.includes(pathToken),
-      );
-      return {
-        output:
-          outputIndex < 0
-            ? null
-            : cloneStoryValue(result.story.commands[outputIndex]!),
-        diagnostics,
-      };
-    },
-  });
+    const result = compileStoryProjectWithDiagnostics(project, request.sceneId);
+    const outputIndex = result.commandSourceIndexes.indexOf(request.commandIndex);
+    const pathToken = `.commands[${request.commandIndex}]`;
+    const diagnostics = result.diagnostics.filter(({ path }) => path.includes(pathToken));
+    return {
+      output: outputIndex < 0 ? null : cloneStoryValue(result.story.commands[outputIndex]!),
+      diagnostics,
+    };
+  },
+});

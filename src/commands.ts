@@ -1,81 +1,18 @@
-import { cloneStoryValue, createStoryId, type JsonObject, type JsonValue, type StoryProjectCommand } from "@haneoka/altair/model";
+import {
+  cloneStoryValue,
+  createStoryId,
+  type JsonObject,
+  type JsonValue,
+  type StoryProjectCommand,
+} from "@haneoka/altair/model";
 import type {
   AltairCommandFieldKind,
   AltairCommandFieldSchema,
   AltairCommandSchemaContribution,
 } from "@haneoka/altair/plugins";
 
-/** Canonical Unity ADV opcode table shared with Vega runtimes. Gaps 8 and 22 are intentional. */
-export const ADV_COMMAND = Object.freeze({
-  In: 0,
-  Out: 1,
-  Talk: 2,
-  Delay: 3,
-  Shake: 4,
-  FadeOut: 5,
-  FadeIn: 6,
-  Focus: 7,
-  Forward: 9,
-  Back: 10,
-  Flash: 11,
-  Brightness: 12,
-  MoveToRight: 13,
-  MoveToLeft: 14,
-  Bgm: 15,
-  SoundVolume: 16,
-  Expression: 17,
-  Pause: 18,
-  Resume: 19,
-  Location: 20,
-  Motion: 21,
-  Character: 23,
-  Costume: 24,
-  Stage: 25,
-  Movie: 26,
-  Clip: 27,
-  Subtitles: 28,
-  Wait: 29,
-  Still: 30,
-  Se: 31,
-  Angle: 32,
-  Pan: 33,
-  Tilt: 34,
-  TalkWindow: 35,
-  ChatWindow: 36,
-  ChatTalk: 37,
-  ChatStamp: 38,
-  ChatRead: 39,
-  ChoiceSet: 40,
-  ChoiceShow: 41,
-  GoTo: 42,
-  PostEffect: 43,
-  Frame: 44,
-  Timeline: 45,
-  Look: 46,
-  Pedestal: 47,
-  Track: 48,
-  DoF: 49,
-  Role: 50,
-  CameraShake: 51,
-  Voice: 52,
-  Zoom: 53,
-  Effect: 54,
-  Alpha: 55,
-  ForceAuto: 56,
-  StageEnv: 57,
-  RimLight: 58,
-  CancelDelay: 59,
-  MoveToUp: 60,
-  MoveToDown: 61,
-  MoveToForward: 62,
-  MoveToBack: 63,
-  MoveToDirection: 64,
-  ChatTyping: 65,
-  LookTarget: 66,
-  PanV2: 67,
-  /** Generic Story opcode namespace starts at 500. */
-  CommandGroup: 500,
-});
+import { VEGA_ADV_OPCODE, VEGA_COMMAND_GROUP_OPCODE } from "@haneoka/vega-protocol";
+export const ADV_COMMAND = Object.freeze({ ...VEGA_ADV_OPCODE, CommandGroup: VEGA_COMMAND_GROUP_OPCODE });
 
 export type AdvCommandName = keyof typeof ADV_COMMAND;
 export type CommandCategory =
@@ -1036,8 +973,8 @@ export const COMMAND_DESCRIPTOR_BY_NAME: ReadonlyMap<AdvCommandName, CommandDesc
   COMMAND_DESCRIPTORS.map((item) => [item.name, item]),
 );
 
-export const commandDescriptor = (code: number | null | undefined): CommandDescriptor | undefined =>
-  code == null ? undefined : COMMAND_DESCRIPTOR_BY_CODE.get(code);
+export const commandDescriptor = (code: number | string | null | undefined): CommandDescriptor | undefined =>
+  typeof code === "number" ? COMMAND_DESCRIPTOR_BY_CODE.get(code) : undefined;
 
 /** Exact string for canonical numeric editor controls, including JSON's observable `-0`. */
 export const storyNumberInputValue = (value: JsonValue | undefined): string =>
@@ -1237,7 +1174,7 @@ export const summarizeStoryCommand = (command: StoryProjectCommand): string => {
 
 export const ADV_NATIVE_OPCODE_MIN = 0;
 export const ADV_NATIVE_OPCODE_MAX = 100;
-export const ADV_PORTABLE_OPCODE_MIN = 500;
+export const ADV_PORTABLE_OPCODE_MIN = VEGA_COMMAND_GROUP_OPCODE;
 
 const schemaId = (name: string): string =>
   `adv.command.${name
@@ -1245,9 +1182,7 @@ const schemaId = (name: string): string =>
     .replace(/[^a-z0-9]+/gi, "-")
     .toLowerCase()}`;
 
-const editorKind = (
-  kind: CommandFieldDescriptor["kind"],
-): AltairCommandFieldKind => {
+const editorKind = (kind: CommandFieldDescriptor["kind"]): AltairCommandFieldKind => {
   switch (kind) {
     case "text":
       return "string";
@@ -1264,36 +1199,20 @@ const editorKind = (
 
 const fieldMetadata = (field: CommandFieldDescriptor): JsonObject => ({
   ...(field.sourceKey === undefined ? {} : { sourceKey: field.sourceKey }),
-  ...(field.parameterIndex === undefined
-    ? {}
-    : { parameterIndex: field.parameterIndex }),
-  ...(field.parameterEncoding === undefined
-    ? {}
-    : { parameterEncoding: field.parameterEncoding }),
-  ...(field.presentOnly === undefined
-    ? {}
-    : { presentOnly: field.presentOnly }),
-  ...(field.audioUsage === undefined
-    ? {}
-    : { audioUsage: field.audioUsage }),
-  ...(field.placeholder === undefined
-    ? {}
-    : { placeholder: field.placeholder }),
+  ...(field.parameterIndex === undefined ? {} : { parameterIndex: field.parameterIndex }),
+  ...(field.parameterEncoding === undefined ? {} : { parameterEncoding: field.parameterEncoding }),
+  ...(field.presentOnly === undefined ? {} : { presentOnly: field.presentOnly }),
+  ...(field.audioUsage === undefined ? {} : { audioUsage: field.audioUsage }),
+  ...(field.placeholder === undefined ? {} : { placeholder: field.placeholder }),
   nativeKind: field.kind,
 });
 
-const commandField = (
-  commandFieldDescriptor: CommandFieldDescriptor,
-): AltairCommandFieldSchema => ({
+const commandField = (commandFieldDescriptor: CommandFieldDescriptor): AltairCommandFieldSchema => ({
   key: commandFieldDescriptor.key,
   label: commandFieldDescriptor.label,
   kind: editorKind(commandFieldDescriptor.kind),
-  ...(commandFieldDescriptor.required === undefined
-    ? {}
-    : { required: commandFieldDescriptor.required }),
-  ...(commandFieldDescriptor.resource === undefined
-    ? {}
-    : { resourceKind: commandFieldDescriptor.resource }),
+  ...(commandFieldDescriptor.required === undefined ? {} : { required: commandFieldDescriptor.required }),
+  ...(commandFieldDescriptor.resource === undefined ? {} : { resourceKind: commandFieldDescriptor.resource }),
   ...(commandFieldDescriptor.choices === undefined
     ? {}
     : {
@@ -1305,49 +1224,32 @@ const commandField = (
   metadata: fieldMetadata(commandFieldDescriptor),
 });
 
-export const advCommandSchema = (
-  commandDescriptorValue: CommandDescriptor,
-): AltairCommandSchemaContribution => ({
+export const advCommandSchema = (commandDescriptorValue: CommandDescriptor): AltairCommandSchemaContribution => ({
   id: schemaId(commandDescriptorValue.name),
   name: commandDescriptorValue.label,
   category: commandDescriptorValue.category,
   opcodes: [commandDescriptorValue.code],
-  sourceNames: [
-    ...new Set(
-      [commandDescriptorValue.name, commandDescriptorValue.type].filter(
-        Boolean,
-      ),
-    ),
-  ],
+  sourceNames: [...new Set([commandDescriptorValue.name, commandDescriptorValue.type].filter(Boolean))],
   fields: commandDescriptorValue.fields.map(commandField),
   metadata: {
     advName: commandDescriptorValue.name,
     advType: commandDescriptorValue.type,
-    ...(commandDescriptorValue.primaryField === undefined
-      ? {}
-      : { primaryField: commandDescriptorValue.primaryField }),
+    ...(commandDescriptorValue.primaryField === undefined ? {} : { primaryField: commandDescriptorValue.primaryField }),
   },
   create: () => createStoryCommand(commandDescriptorValue.code),
 });
 
-export const ADV_COMMAND_SCHEMAS: readonly AltairCommandSchemaContribution[] =
-  Object.freeze(COMMAND_DESCRIPTORS.map(advCommandSchema));
+export const ADV_COMMAND_SCHEMAS: readonly AltairCommandSchemaContribution[] = Object.freeze(
+  COMMAND_DESCRIPTORS.map(advCommandSchema),
+);
 
-export const ADV_NATIVE_COMMAND_SCHEMAS: readonly AltairCommandSchemaContribution[] =
-  Object.freeze(
-    ADV_COMMAND_SCHEMAS.filter(
-      ({ opcodes }) =>
-        opcodes?.[0] !== undefined &&
-        opcodes[0] >= ADV_NATIVE_OPCODE_MIN &&
-        opcodes[0] <= ADV_NATIVE_OPCODE_MAX,
-    ),
-  );
+export const ADV_NATIVE_COMMAND_SCHEMAS: readonly AltairCommandSchemaContribution[] = Object.freeze(
+  ADV_COMMAND_SCHEMAS.filter(
+    ({ opcodes }) =>
+      opcodes?.[0] !== undefined && opcodes[0] >= ADV_NATIVE_OPCODE_MIN && opcodes[0] <= ADV_NATIVE_OPCODE_MAX,
+  ),
+);
 
-export const ADV_PORTABLE_COMMAND_SCHEMAS: readonly AltairCommandSchemaContribution[] =
-  Object.freeze(
-    ADV_COMMAND_SCHEMAS.filter(
-      ({ opcodes }) =>
-        opcodes?.[0] !== undefined &&
-        opcodes[0] >= ADV_PORTABLE_OPCODE_MIN,
-    ),
-  );
+export const ADV_PORTABLE_COMMAND_SCHEMAS: readonly AltairCommandSchemaContribution[] = Object.freeze(
+  ADV_COMMAND_SCHEMAS.filter(({ opcodes }) => opcodes?.[0] !== undefined && opcodes[0] >= ADV_PORTABLE_OPCODE_MIN),
+);

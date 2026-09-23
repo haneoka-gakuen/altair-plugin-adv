@@ -87,7 +87,12 @@
       "import": "./dist/validation.js",
       "default": "./dist/validation.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./documents": {
+      "types": "./dist/documents.d.ts",
+      "import": "./dist/documents.js",
+      "default": "./dist/documents.js"
+    }
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
@@ -95,7 +100,9 @@
     "verify:package": "node scripts/verify-package.mjs",
     "verify:pack": "npm pack --dry-run --ignore-scripts",
     "check": "pnpm run typecheck && pnpm run build && pnpm run verify:package && pnpm run verify:pack",
-    "prepack": "pnpm run check"
+    "prepack": "pnpm run check",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown"
   },
   "peerDependencies": {
     "@haneoka/altair": "^0.1.0",
@@ -108,7 +115,8 @@
     "@types/semver": "^7.7.1",
     "semver": "^7.7.4",
     "typescript": "^6.0.3",
-    "vite": "^7.3.6"
+    "vite": "^7.3.6",
+    "prettier": "3.7.4"
   },
   "engines": {
     "node": ">=20"
