@@ -1,4 +1,4 @@
-import { commandDescriptor, storyTargetNameFromEditor } from "./commands.js";
+import { ADV_COMMAND, commandDescriptor, storyTargetNameFromEditor } from "./commands.js";
 import { compileStoryProject } from "./compiler.js";
 import {
   STORY_PROJECT_VERSION,
@@ -203,10 +203,14 @@ const normalizeAdvFieldAliases = (value: JsonObject): JsonObject => {
   return fields;
 };
 
-const splitAdvCodecFields = (value: JsonObject): { fields: JsonObject; codecFields: JsonObject } => {
+const splitAdvCodecFields = (
+  value: JsonObject,
+  code: number | null,
+): { fields: JsonObject; codecFields: JsonObject } => {
   const fields = normalizeAdvFieldAliases(value);
   const codecFields: JsonObject = {};
   for (const key of ADV_CODEC_FIELD_KEYS) {
+    if (key === "advId" && code === ADV_COMMAND.ChoiceShow) continue;
     if (!own(fields, key)) continue;
     codecFields[key] = cloneStoryValue(fields[key]!);
     delete fields[key];
@@ -264,7 +268,7 @@ const parseNormalizedAdvStoryJson = (root: JsonObject, options: ImportAdvStoryOp
     const commandPresent = Object.prototype.hasOwnProperty.call(raw, "command");
     const indexPresent = Object.prototype.hasOwnProperty.call(raw, "index");
     const { command: _command, index, ...rawFields } = raw;
-    const { fields: externalFields, codecFields } = splitAdvCodecFields(rawFields);
+    const { fields: externalFields, codecFields } = splitAdvCodecFields(rawFields, code);
     const fields = canonicalAdvFields(code, externalFields);
     let extensions: JsonObject = { advCommandPresent: commandPresent, advIndexPresent: indexPresent };
     if (index !== undefined) extensions.advIndex = index;
@@ -465,7 +469,7 @@ const replaceNormalizedCommandValue = (command: StoryProjectCommand, value: Json
   }
   if (!imported && indexPresent) throw new TypeError("Only imported ADV commands have a source index");
   const { command: _command, index: _index, ...rawFields } = cloneStoryValue(value);
-  const { fields: externalFields, codecFields } = splitAdvCodecFields(rawFields);
+  const { fields: externalFields, codecFields } = splitAdvCodecFields(rawFields, code);
   const fields = canonicalAdvFields(code, externalFields);
   let extensions = cloneStoryValue(command.extensions);
   if (imported) {
@@ -507,7 +511,10 @@ export const replaceStoryCommandNativeValue = (
   const nativeRow = cloneStoryValue(value);
   const normalized = normalizeEpisodeRow(nativeRow);
   const { command: rawCommand, index, ...rawNormalizedFields } = normalized;
-  const { fields: externalFields, codecFields } = splitAdvCodecFields(rawNormalizedFields);
+  const { fields: externalFields, codecFields } = splitAdvCodecFields(
+    rawNormalizedFields,
+    typeof rawCommand === "number" ? rawCommand : null,
+  );
   const normalizedFields = canonicalAdvFields(
     typeof rawCommand === "number" && Number.isSafeInteger(rawCommand) && rawCommand >= 0 ? rawCommand : null,
     externalFields,

@@ -78,6 +78,11 @@ groups.
 
 ## Reading and writing files
 
+Command groups keep each child's `commandId` through native timelines and
+re-export. Adding camera cues leaves dialogue and voice bindings attached to the
+same node. Namespaced plugin commands use their owning codec within the same
+timeline.
+
 ```ts
 import {
   importAdvEpisodeJson,

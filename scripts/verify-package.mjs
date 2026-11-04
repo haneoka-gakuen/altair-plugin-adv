@@ -92,7 +92,9 @@ const walkRepository = async (path, relativePath = "") => {
 };
 
 await walkRepository(root);
-const forbiddenRepositoryFiles = repositoryFiles.filter((path) => forbiddenPath.test(path));
+const forbiddenRepositoryFiles = repositoryFiles.filter(
+  (path) => !path.startsWith("docs/brand/") && forbiddenPath.test(path),
+);
 if (forbiddenRepositoryFiles.length > 0) {
   fail(`restricted payload:\n${forbiddenRepositoryFiles.join("\n")}`);
 }

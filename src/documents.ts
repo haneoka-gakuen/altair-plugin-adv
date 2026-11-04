@@ -1,6 +1,7 @@
 import { resolveAdvDocumentResources } from "./document-resources.js";
-import { VEGA_SYSTEM_OPCODE, VEGA_COMMAND_GROUP_OPCODE } from "@haneoka/vega-protocol";
+import { VEGA_SYSTEM_OPCODE, VEGA_COMMAND_GROUP_OPCODE, isVegaCommandType } from "@haneoka/vega-protocol";
 import {
+  cloneStoryValue,
   type AltairDocumentRegistry,
   type AltairDocumentCommand,
   type AltairAuthoredNode,
@@ -57,6 +58,26 @@ export function advCommandToAuthoredNode(
   command: StoryProjectCommand,
   encode: (command: StoryProjectCommand) => AltairAuthoredNode = advCommandToAuthoredNode,
 ): AltairAuthoredNode {
+  if (command.command === "haneoka.vega-core:propertyClip@1") {
+    const { key: _, ...args } = command.fields;
+    return {
+      id: command.id,
+      type: { plugin: "haneoka.altair", name: "propertyClip" },
+      schemaVersion: 1,
+      arguments: args,
+      extensions: { commandExtensions: command.extensions },
+    };
+  }
+  if (command.command === "haneoka.vega-core:audioClip@1") {
+    const { clipId: _, key: __, ...args } = command.fields;
+    return {
+      id: command.id,
+      type: { plugin: "haneoka.altair", name: "audioClip" },
+      schemaVersion: 1,
+      arguments: args,
+      extensions: { commandExtensions: command.extensions },
+    };
+  }
   if (command.command === VEGA_SYSTEM_OPCODE.SetDialogueVisibility)
     return {
       id: command.id,
@@ -85,9 +106,9 @@ export function advCommandToAuthoredNode(
           Array.isArray(value.command)
         )
           throw new Error("Invalid timeline action");
-        const { command: opcode, ...fields } = value.command,
-          id = `${command.id}/action/${index}`;
-        if (typeof opcode !== "number" || !Number.isSafeInteger(opcode) || opcode < 0)
+        const { command: opcode, commandId, ...fields } = value.command,
+          id = typeof commandId === "string" && commandId ? commandId : `${command.id}/action/${index}`;
+        if (!(typeof opcode === "number" && Number.isSafeInteger(opcode) && opcode >= 0) && !isVegaCommandType(opcode))
           throw new Error("Invalid timeline opcode");
         const child = encode({ id, command: opcode, fields, extensions: {} });
         children.push(child);
@@ -192,7 +213,11 @@ export function storyProjectToAuthoredWorkspace(
       plugins,
       assets: project.assets,
       runtime: project.runtime,
-      extensions: { ...project.extensions, storyFields: project.storyFields },
+      extensions: {
+        ...project.extensions,
+        storyMeta: cloneStoryValue(project.meta) as JsonObject,
+        storyFields: project.storyFields,
+      },
     },
     scenes,
   };

@@ -9,7 +9,7 @@ const PROJECT_KEYS: Readonly<Record<StoryResourceKind, readonly string[]>> = Obj
   frame: ["frames"],
   effect: ["effects", "postEffects"],
   video: ["videos"],
-  live2d: ["live2d", "characters"],
+  live2d: ["models", "live2d", "characters"],
 });
 
 const REQUEST_KINDS: Readonly<Record<string, StoryResourceKind>> = Object.freeze({
@@ -58,7 +58,10 @@ export const findAdvProjectAsset = (
   const identity = reference.trim();
   for (const kind of resourceKinds(requestedKind)) {
     for (const projectKey of PROJECT_KEYS[kind]) {
-      for (const entry of entries(project.assets[projectKey])) {
+      const collection = project.assets[projectKey];
+      if (record(collection) && Object.hasOwn(collection, identity) && record(collection[identity]))
+        return { kind, entry: { resourceRef: identity, ...collection[identity] } };
+      for (const entry of entries(collection)) {
         if (storyResourceAliases(kind, entry).includes(identity)) {
           return { kind, entry };
         }
