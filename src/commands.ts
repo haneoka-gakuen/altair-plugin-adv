@@ -335,7 +335,20 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
     "focus",
     "Focus",
     "camera",
-    [targetName(), position(), cameraDistance, duration(), easing(), delay, noWait],
+    [
+      targetName(),
+      position(),
+      cameraDistance,
+      field("focusTargets", "Shot subjects", "resource-list"),
+      select("cameraAnchor", "Camera anchor", [
+        { value: "slot", label: "Stage slot" },
+        { value: "character", label: "Character position" },
+      ]),
+      duration(),
+      easing(),
+      delay,
+      noWait,
+    ],
     { targetName: "", positionType: 5, cameraDistance: 2, params: ["", "6"], duration: 0.3 },
     "targetName",
   ),
@@ -955,6 +968,39 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
       noWait,
     ],
     { params: ["0", "6", "0.5"], duration: 0.3 },
+  ),
+  descriptor(
+    "MotionLoop",
+    "motionLoop",
+    "Parameter loop",
+    "character",
+    [
+      targetName(),
+      text("motionName", "Motion"),
+      number("motionFadeIn", "Crossfade duration"),
+      parameterSelect("loopMode", "Action", 0, [
+        { value: "", label: "Play" },
+        { value: "stop", label: "Stop" },
+      ]),
+    ],
+    { targetName: "", motionName: "", motionFadeIn: 0, params: [""] },
+    "motionName",
+  ),
+  descriptor(
+    "EyeBlink",
+    "eyeBlink",
+    "Auto blink",
+    "character",
+    [
+      targetName(),
+      parameterSelect("blinkMode", "Action", 0, [
+        { value: "", label: "Toggle" },
+        { value: "stop", label: "Stop" },
+        { value: "resume", label: "Resume" },
+      ]),
+    ],
+    { targetName: "", params: [""] },
+    "targetName",
   ),
   descriptor("CommandGroup", "commandGroup", "Command group", "flow", [], {
     commandGroup: {
