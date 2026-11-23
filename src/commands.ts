@@ -229,6 +229,7 @@ const canvasLayers = multiSelect("canvasLayers", "Canvas layers", CANVAS_LAYER_C
 const duration = (label = "Duration") => number("duration", label);
 const vector3 = (key: string, label: string) => field(key, label, "vector3");
 const delay = number("delaySeconds", "Start delay");
+const advanceAfter = number("advanceAfterSeconds", "Advance after (s)");
 const noWait = boolean("noWait", "Continue immediately");
 const easing = (index = 1) => parameterSelect("easing", "Easing", index, EASING_CHOICES);
 const targetName = (label = "Character") => text("targetName", label);
@@ -284,6 +285,7 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
     "dialogue",
     [
       targetName("Lip-sync character"),
+      field("lipSyncTargets", "Lip-sync character", "resource-list"),
       localizedList("targetTextNames", "Displayed speaker name"),
       select("targetStatus", "Name display", TARGET_STATUS_CHOICES),
       localized("text", "Dialogue"),
@@ -292,6 +294,7 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
       parameterSelect("lipSyncMode", "Lip-sync mode", 0, LIP_SYNC_CHOICES),
       parameterNumber("mouthOpening", "Mouth opening", 1),
       boolean("hideTalkOnComplete", "Hide dialogue when complete"),
+      advanceAfter,
       noWait,
     ],
     { targetName: "", text: "" },
@@ -635,11 +638,13 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
     "chat",
     [
       text("chatPresetRef", "Sender chat preset"),
+      field("lipSyncTargets", "Lip-sync character", "resource-list"),
       localizedList("targetTextNames", "Displayed sender"),
       localized("text", "Message", true),
       parameterNumber("readCount", "Read count", 0),
       parameterText("chatMemoryRef", "Conversation thread", 2),
       resourceList("voiceRefs", "Character voice", "audio", { audioUsage: "voice" }),
+      advanceAfter,
       noWait,
     ],
     { chatPresetRef: "", text: "", params: ["0", "", ""] },
@@ -802,7 +807,12 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
     "voice",
     "Voice",
     "audio",
-    [resourceList("voiceRefs", "Character voice", "audio", { audioUsage: "voice" })],
+    [
+      targetName("Lip-sync character"),
+      field("lipSyncTargets", "Lip-sync character", "resource-list"),
+      resourceList("voiceRefs", "Character voice", "audio", { audioUsage: "voice" }),
+      noWait,
+    ],
     { voiceRefs: [] },
     "voiceRefs",
   ),
@@ -945,6 +955,7 @@ export const COMMAND_DESCRIPTORS: readonly CommandDescriptor[] = Object.freeze([
     "character",
     [
       targetName("Source character"),
+      text("lookTarget", "Target character"),
       position("positionType", "Target character position"),
       parameterSelect("lookMode", "Action", 2, LOOK_MODE_CHOICES),
       duration(),

@@ -1,5 +1,11 @@
 import { resolveAdvDocumentResources } from "./document-resources.js";
-import { VEGA_SYSTEM_OPCODE, VEGA_COMMAND_GROUP_OPCODE, isVegaCommandType } from "@haneoka/vega-protocol";
+import {
+  VEGA_SYSTEM_OPCODE,
+  VEGA_COMMAND_GROUP_OPCODE,
+  VEGA_CORE_ADJUSTMENT,
+  VEGA_CORE_MEDIA_CLIP,
+  isVegaCommandType,
+} from "@haneoka/vega-protocol";
 import {
   cloneStoryValue,
   type AltairDocumentRegistry,
@@ -58,6 +64,26 @@ export function advCommandToAuthoredNode(
   command: StoryProjectCommand,
   encode: (command: StoryProjectCommand) => AltairAuthoredNode = advCommandToAuthoredNode,
 ): AltairAuthoredNode {
+  if (command.command === VEGA_CORE_MEDIA_CLIP) {
+    const { key: _, ...args } = command.fields;
+    return {
+      id: command.id,
+      type: { plugin: "haneoka.altair", name: "mediaClip" },
+      schemaVersion: 1,
+      arguments: args,
+      extensions: { commandExtensions: command.extensions },
+    };
+  }
+  if (command.command === VEGA_CORE_ADJUSTMENT) {
+    const { key: _, source: maskSource, ...args } = command.fields;
+    return {
+      id: command.id,
+      type: { plugin: "haneoka.altair", name: "adjustment" },
+      schemaVersion: 1,
+      arguments: { ...args, ...(typeof maskSource === "string" ? { maskSource } : {}) },
+      extensions: { commandExtensions: command.extensions },
+    };
+  }
   if (command.command === "haneoka.vega-core:propertyClip@1") {
     const { key: _, ...args } = command.fields;
     return {
